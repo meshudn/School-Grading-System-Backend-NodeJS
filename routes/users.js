@@ -86,7 +86,7 @@ router.post("/", (request, response) => {
                 password: hash,
                 firstname: object.firstname,
                 lastname: object.lastname,
-                role: "teacher",
+                role: object.role,
                 archived: "false"
             };
             dbo.collection("users").insertOne(collection, function (err, res) {
@@ -117,22 +117,23 @@ router.post("/login", (request, response) => {
             if (err) throw err;
             //console.log(res);
 
-            if(res){
+            if (res) {
                 userPassword = res.password;
                 console.log("userpass: " + userPassword);
-                response.status(200);
-                response.send(res);
 
-                bcrypt.compare("mishty12", userPassword, function(err, hashRes) {
-                    if(hashRes == true){
+                bcrypt.compare(object.password, userPassword, function (err, hashRes) {
+                    if (hashRes == true) {
                         console.log("login successful");
-                    }else{
-                        console.log("login failed");
+                        response.status(200);
+                        response.send("");
+                    } else {
+                        response.status(401);
+                        response.send("");
                     }
                 });
-            }else{
+            } else {
                 response.status(401);
-                response.send("");
+                response.send("Username or Password not matched.");
             }
 
             db.close();
@@ -140,29 +141,170 @@ router.post("/login", (request, response) => {
     });
 });
 
-router.put("/", (request, response) => {
+router.put("/:id", (request, response) => {
+    let user_id;
+    try {
+        user_id = request.params.id;
+    } catch (e) {
+        user_id = "";
+        response.status(400);
+    }
+    const object = request.body;
+    console.log("request data: " + object.firstname);
+
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
-        var collection = {
-            $set: {
-                username: "user1",
-                password: "sss",
-                forename: "Nafisa",
-                surname: "Mishty",
-                role: "teacher"
-            }
-        };
+        var collection;
+        if (object.username && object.password && object.firstname && object.lastname && object.role) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    password: object.password,
+                    firstname: object.firstname,
+                    lastname: object.lastname,
+                    role: object.role
+                }
+            };
+        } else if (object.username && object.firstname && object.lastname && object.role) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    firstname: object.firstname,
+                    lastname: object.lastname,
+                    role: object.role
+                }
+            };
+        } else if (object.username && object.password && object.firstname && object.lastname) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    password: object.password,
+                    firstname: object.firstname,
+                    lastname: object.lastname,
+                }
+            };
+        } else if (object.username && object.password && object.firstname) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    password: object.password,
+                    firstname: object.firstname,
+                }
+            };
+        } else if (object.username && object.password && object.lastname) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    password: object.password,
+                    lastname: object.lastname,
+                }
+            };
+        } else if (object.username && object.password) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    password: object.password,
+                }
+            };
+        } else if (object.username && object.firstname) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    firstname: object.firstname,
+                }
+            };
+        } else if (object.username && object.lastname) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    lastname: object.lastname,
+                }
+            };
+        } else if (object.username && object.role) {
+            collection = {
+                $set: {
+                    username: object.username,
+                    role: object.role,
+                }
+            };
+        } else if (object.password) {
+            collection = {
+                $set: {
+                    password: object.password,
+                }
+            };
+
+        } else if (object.firstname) {
+            collection = {
+                $set: {
+                    firstname: object.firstname,
+                }
+            };
+        } else if (object.lastname) {
+            collection = {
+                $set: {
+                    lastname: object.lastname,
+                }
+            };
+        } else if (object.username) {
+            collection = {
+                $set: {
+                    username: object.username,
+                }
+            };
+        } else if (object.role) {
+            collection = {
+                $set: {
+                    role: object.role,
+                }
+            };
+        } else {
+            response.status(400);
+            response.send();
+        }
         var query = {
-            userid: "1625172787598"
+            userid: parseInt(user_id)
         };
-        dbo.collection("users").updateOne(query, collection, function (err, res) {
-            if (err) throw err;
-            console.log("One user updated");
-            response.status(200);
-            response.send(collection);
-            db.close();
-        });
+
+
+        /*
+        * if password changing has been requested
+        * then storing data after hashing password
+        * or normal storing mechanism to mongodb
+        * */
+        if(object.password){
+            /*
+            * updating new password
+            * password hashing before storing
+            * */
+            console.log("collection: "+ collection);
+            bcrypt.hash(object.password, saltRound, (err, hash) => {
+                collection.$set.password = hash;
+                dbo.collection("users").updateOne(query, collection, function (err, res) {
+                    if (err) throw err;
+                    console.log("password updated");
+                    response.status(200);
+                    response.send();
+                    db.close();
+                });
+            });
+        }else{
+            dbo.collection("users").updateOne(query,collection, function (err, res) {
+                if (err) throw err;
+                console.log("One user updated");
+                if (res.matchedCount == 1) {
+                    response.status(200);
+                    response.send("");
+                } else {
+                    response.status(404);
+                    response.send("");
+                }
+
+                db.close();
+            });
+        }
+        /* ... mongodb saving completed ... */
     });
 });
 router.delete("/:id", (request, response) => {
