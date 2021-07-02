@@ -1,5 +1,5 @@
 /*
-* API /User
+* API /Users
 * User Add, Remove, Update
 * */
 const express = require("express");
@@ -46,7 +46,7 @@ router.get("/:id", (request, response) => {
             //console.log("user format checked");
         } else if (user_query % 2 == 0 || user_query % 2 != 0) {
             query = {
-                userid: parseInt(user_query)
+                userId: parseInt(user_query)
             }
             //console.log("number format checked");
         } else {
@@ -81,11 +81,11 @@ router.post("/", (request, response) => {
             if (err) throw err;
             var dbo = db.db("school_grading_system");
             var collection = {
-                userid: Date.now() + Math.floor(Math.random() * 1000),
+                userId: Date.now() + Math.floor(Math.random() * 1000),
                 username: object.username,
                 password: hash,
-                firstname: object.firstname,
-                lastname: object.lastname,
+                firstName: object.firstName,
+                lastName: object.lastName,
                 role: object.role,
                 archived: "false"
             };
@@ -93,7 +93,7 @@ router.post("/", (request, response) => {
                 if (err) throw err;
                 console.log("One user inserted");
                 response.status(201);
-                response.send("/users/" + collection.userid);
+                response.send("/users/" + collection.userId);
                 db.close();
             });
         });
@@ -150,54 +150,54 @@ router.put("/:id", (request, response) => {
         response.status(400);
     }
     const object = request.body;
-    console.log("request data: " + object.firstname);
+    console.log("request data: " + object.firstName);
 
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.username && object.password && object.firstname && object.lastname && object.role) {
+        if (object.username && object.password && object.firstName && object.lastName && object.role) {
             collection = {
                 $set: {
                     username: object.username,
                     password: object.password,
-                    firstname: object.firstname,
-                    lastname: object.lastname,
+                    firstName: object.firstName,
+                    lastName: object.lastName,
                     role: object.role
                 }
             };
-        } else if (object.username && object.firstname && object.lastname && object.role) {
+        } else if (object.username && object.firstName && object.lastName && object.role) {
             collection = {
                 $set: {
                     username: object.username,
-                    firstname: object.firstname,
-                    lastname: object.lastname,
+                    firstName: object.firstName,
+                    lastName: object.lastName,
                     role: object.role
                 }
             };
-        } else if (object.username && object.password && object.firstname && object.lastname) {
+        } else if (object.username && object.password && object.firstName && object.lastName) {
             collection = {
                 $set: {
                     username: object.username,
                     password: object.password,
-                    firstname: object.firstname,
-                    lastname: object.lastname,
+                    firstName: object.firstName,
+                    lastName: object.lastName,
                 }
             };
-        } else if (object.username && object.password && object.firstname) {
+        } else if (object.username && object.password && object.firstName) {
             collection = {
                 $set: {
                     username: object.username,
                     password: object.password,
-                    firstname: object.firstname,
+                    firstName: object.firstName,
                 }
             };
-        } else if (object.username && object.password && object.lastname) {
+        } else if (object.username && object.password && object.lastName) {
             collection = {
                 $set: {
                     username: object.username,
                     password: object.password,
-                    lastname: object.lastname,
+                    lastName: object.lastName,
                 }
             };
         } else if (object.username && object.password) {
@@ -207,18 +207,18 @@ router.put("/:id", (request, response) => {
                     password: object.password,
                 }
             };
-        } else if (object.username && object.firstname) {
+        } else if (object.username && object.firstName) {
             collection = {
                 $set: {
                     username: object.username,
-                    firstname: object.firstname,
+                    firstName: object.firstName,
                 }
             };
-        } else if (object.username && object.lastname) {
+        } else if (object.username && object.lastName) {
             collection = {
                 $set: {
                     username: object.username,
-                    lastname: object.lastname,
+                    lastName: object.lastName,
                 }
             };
         } else if (object.username && object.role) {
@@ -235,16 +235,16 @@ router.put("/:id", (request, response) => {
                 }
             };
 
-        } else if (object.firstname) {
+        } else if (object.firstName) {
             collection = {
                 $set: {
-                    firstname: object.firstname,
+                    firstName: object.firstName,
                 }
             };
-        } else if (object.lastname) {
+        } else if (object.lastName) {
             collection = {
                 $set: {
-                    lastname: object.lastname,
+                    lastName: object.lastName,
                 }
             };
         } else if (object.username) {
@@ -264,7 +264,7 @@ router.put("/:id", (request, response) => {
             response.send();
         }
         var query = {
-            userid: parseInt(user_id)
+            userId: parseInt(user_id)
         };
 
 
@@ -321,7 +321,7 @@ router.delete("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query = {
-            userid: parseInt(user_query)
+            userId: parseInt(user_query)
         };
         if (user_query % 2 == 0 || user_query % 2 != 0) {
             dbo.collection("users").deleteOne(query, function (err, res) {
