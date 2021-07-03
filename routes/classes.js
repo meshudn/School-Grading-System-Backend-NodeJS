@@ -19,13 +19,8 @@ router.get("/", (request, response) => {
         dbo.collection(collectionClass).find(query).toArray(function (err, res) {
             if (err) throw err;
             //console.log(res);
-            if (res.matchedCount == 1) {
-                response.status(200);
-                response.send("");
-            } else {
-                response.status(204);
-                response.send("");
-            }
+            response.status(200);
+            response.send(res);
             db.close();
         });
     });

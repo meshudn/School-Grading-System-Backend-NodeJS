@@ -19,20 +19,14 @@ router.get("/", (request, response) => {
         dbo.collection(collectionSubjects).find(query).toArray(function (err, res) {
             if (err) throw err;
             //console.log(res);
-            if (res.matchedCount == 1) {
-                response.status(200);
-                response.send("");
-            } else {
-                response.status(204);
-                response.send("");
-            }
+            response.status(200);
+            response.send(res);
             db.close();
         });
     });
 });
 router.get("/:id", (request, response) => {
     let user_query;
-
     try {
         user_query = request.params.id;
     } catch (e) {
@@ -148,7 +142,7 @@ router.delete("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query = {
-            className: user_query
+            subjectName: user_query
         };
         if (user_query) {
             dbo.collection(collectionSubjects).deleteOne(query, function (err, res) {
