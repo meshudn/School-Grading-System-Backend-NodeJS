@@ -1,13 +1,12 @@
 /*
-* API /Classes
-* Class Add, Remove, Update
+* API /grades
+* Grades Add, Remove, Update
 * */
 const express = require("express");
 const router = express.Router();
 var MongoClient = require('mongodb').MongoClient;
 var mongoDbUrl = "mongodb://localhost:27017/";
-const collectionClass = "classes";
-const collectionUsers = "users";
+const collectionName = "grades";
 
 router.get("/", (request, response) => {
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
@@ -16,7 +15,7 @@ router.get("/", (request, response) => {
         var query = {
             archived: "false"
         };
-        dbo.collection(collectionClass).find(query).toArray(function (err, res) {
+        dbo.collection(collectionName).find(query).toArray(function (err, res) {
             if (err) throw err;
             //console.log(res);
             response.status(200);
@@ -25,13 +24,14 @@ router.get("/", (request, response) => {
         });
     });
 });
-router.get("/:id", (request, response) => {
-    let user_query;
-
+router.get("/search", (request, response) => {
+    let query_testId, query_studentId;
     try {
-        user_query = request.params.id;
+        query_testId = request.query.testId;
+        query_studentId = request.query.studentId;
     } catch (e) {
-        user_query = "";
+        query_testName = "";
+        query_studentId = "";
         response.status(400);
     }
     console.log("id: " + user_query);
@@ -40,10 +40,12 @@ router.get("/:id", (request, response) => {
         var dbo = db.db("school_grading_system");
         var query;
         query = {
-            className: user_query
+            testId: query_testId,
+            studentId: query_studentId,
+            archived: "false"
         };
         if (query) {
-            dbo.collection(collectionClass).find(query).toArray(function (err, res) {
+            dbo.collection(collectionName).find(query).toArray(function (err, res) {
                 if (err) throw err;
                 //console.log(res);
 
@@ -66,27 +68,35 @@ router.post("/", (request, response) => {
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
+
         var collection = {
-            classId: "c" + Date.now() + Math.floor(Math.random() * 1000),
-            className: object.className,
+            gradeId: "g" + Date.now() + Math.floor(Math.random() * 1000),
+            testId:  object.testId,
+            subjectId: object.subjectId,
+            classId: object.classId,
+            userId: object.userId,
+            testDate: object.testDate,
+            grade: object.grade,
+            gradePoint: object.gradePoint,
+            marks: object.marks,
             archived: "false"
         };
-        dbo.collection(collectionClass).insertOne(collection, function (err, res) {
+        dbo.collection(collectionName).insertOne(collection, function (err, res) {
             if (err) throw err;
-            console.log("One class inserted");
+            console.log("One subject inserted");
             response.status(201);
-            response.send("/classes/" + collection.className);
+            response.send("/grades/" + collection.testId);
             db.close();
         });
     });
 });
 
 router.put("/:id", (request, response) => {
-    let classid;
+    let queryId;
     try {
-        classid = request.params.id;
+        queryId = request.params.id;
     } catch (e) {
-        classid = "";
+        queryId = "";
         response.status(400);
     }
     const object = request.body;
@@ -94,23 +104,30 @@ router.put("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.className) {
+        if (object.testId && object.subjectId && object.classId && object.userId && object.testDate &&  object.grade &&  object.gradePoint &&  object.marks &&   object.archived) {
             collection = {
                 $set: {
-                    className: object.className,
+                    testId: object.testId,
+                    testDate: object.testDate,
+                    subjectId: object.subjectId,
+                    classId: object.classId,
+                    userId: object.userId,
+                    grade: object.grade,
+                    gradePoint : object.gradePoint,
+                    marks: object.marks,
+                    archived: object.archived,
                 }
             };
         } else {
             response.status(400);
-            response.send();
+            response.send("Please provide all the information to update.");
         }
         var query = {
-            className: classid
+            testId: queryId
         };
-
-        dbo.collection(collectionClass).updateOne(query, collection, function (err, res) {
+        dbo.collection(collectionName).updateOne(query, collection, function (err, res) {
             if (err) throw err;
-            console.log("One class updated");
+            console.log("One grade updated");
             if (res.matchedCount == 1) {
                 response.status(200);
                 response.send("");
@@ -118,14 +135,15 @@ router.put("/:id", (request, response) => {
                 response.status(404);
                 response.send("");
             }
-
             db.close();
         });
     });
 });
 router.delete("/:id", (request, response) => {
+    /*
+    * id: gradeID of the test
+    * */
     let user_query;
-
     try {
         user_query = request.params.id;
     } catch (e) {
@@ -137,14 +155,14 @@ router.delete("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query = {
-            className: user_query
+            gradeId: user_query
         };
         if (user_query) {
-            dbo.collection(collectionClass).deleteOne(query, function (err, res) {
+            dbo.collection(collectionName).deleteOne(query, function (err, res) {
                 if (err) {
                     throw err;
                 }
-                console.log("One class deleted: " + res);
+                console.log("One grade deleted: " + res);
                 if (res.deletedCount == 1) {
                     response.status(200);
                     response.send("Successfully deleted!");
@@ -156,10 +174,8 @@ router.delete("/:id", (request, response) => {
             });
         } else {
             response.status(400);
-            response.send("Class Name is not matched or class Name format is not correct.");
+            response.send("grade id is not matched or grade id format is not correct.");
         }
-
     });
 });
-
 module.exports = router;

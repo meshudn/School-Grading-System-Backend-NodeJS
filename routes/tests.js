@@ -1,6 +1,6 @@
 /*
-* API /Subjects
-* Subjects Add, Remove, Update
+* API /tests
+* Tests Add, Remove, Update
 * */
 const express = require("express");
 const router = express.Router();
@@ -69,6 +69,7 @@ router.post("/", (request, response) => {
             testId:  "t" + Date.now() + Math.floor(Math.random() * 1000),
             testName: object.testName,
             testDate: object.testDate,
+            subjectId: object.subjectId,
             subjectName: object.subjectName,
             teacher: object.teacher,
             archived: "false"
@@ -96,11 +97,12 @@ router.put("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.subjectName && object.testName && object.testDate && object.teacher && object.archived) {
+        if (object.subjectName && object.subjectId && object.testName && object.testDate && object.teacher && object.archived) {
             collection = {
                 $set: {
                     testName: object.testName,
                     testDate: object.testDate,
+                    subjectId: object.subjectId,
                     subjectName: object.subjectName,
                     teacher: object.teacher,
                     archived: object.archived,

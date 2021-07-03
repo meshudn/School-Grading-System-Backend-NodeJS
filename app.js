@@ -15,6 +15,9 @@ app.use("/api/v1/subjects", subjectRoute);
 const testRoute = require("./routes/tests");
 app.use("/api/v1/tests", testRoute);
 
+const gradeRoute = require("./routes/grades");
+app.use("/api/v1/grades", gradeRoute);
+
 app.get("/", (request,response) => {
     response.send("Welcome to the Fastest School Grading System");
 });
