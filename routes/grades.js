@@ -123,7 +123,7 @@ router.put("/:id", (request, response) => {
             response.send("Please provide all the information to update.");
         }
         var query = {
-            testId: queryId
+            gradeId: queryId
         };
         dbo.collection(collectionName).updateOne(query, collection, function (err, res) {
             if (err) throw err;
