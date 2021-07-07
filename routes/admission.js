@@ -1,12 +1,12 @@
 /*
-* API /Classes
-* Class Add, Remove, Update
+* API /admission
+* Admission Add, Remove, Update
 * */
 const express = require("express");
 const router = express.Router();
 var MongoClient = require('mongodb').MongoClient;
 var mongoDbUrl = "mongodb://localhost:27017/";
-const collectionClass = "classes";
+const collectionClass = "admission";
 const collectionUsers = "users";
 
 router.get("/", (request, response) => {
@@ -40,7 +40,7 @@ router.get("/:id", (request, response) => {
         var dbo = db.db("school_grading_system");
         var query;
         query = {
-            className: user_query
+            classId: user_query
         };
         if (query) {
             dbo.collection(collectionClass).find(query).toArray(function (err, res) {
@@ -67,8 +67,9 @@ router.post("/", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection = {
-            classId: "c" + Date.now() + Math.floor(Math.random() * 1000),
-            className: object.className,
+            admissionId: "a" + Date.now() + Math.floor(Math.random() * 1000),
+            classId: object.classId,
+            studentId: object.studentId,
             archived: "false"
         };
         dbo.collection(collectionClass).insertOne(collection, function (err, res) {
@@ -82,11 +83,11 @@ router.post("/", (request, response) => {
 });
 
 router.put("/:id", (request, response) => {
-    let user_query;
+    let classid;
     try {
-        user_query = request.params.id;
+        classid = request.params.id;
     } catch (e) {
-        user_query = "";
+        classid = "";
         response.status(400);
     }
     const object = request.body;
@@ -98,15 +99,27 @@ router.put("/:id", (request, response) => {
             collection = {
                 $set: {
                     className: object.className,
+                }
+            };
+        }
+        if(object.studentId){
+            collection = {
+                $set: {
+                    className: object.className,
+                }
+            };
+        }
+        if(object.studentId && object.classId && object.studentId && object.archived){
+            collection = {
+                $set: {
+                    studentId: object.studentId,
+                    classId: object.classId,
                     archived: object.archived,
                 }
             };
-        } else {
-            response.status(400);
-            response.send();
         }
         var query = {
-            classId: user_query
+            admissionId: classid
         };
 
         dbo.collection(collectionClass).updateOne(query, collection, function (err, res) {
@@ -126,7 +139,6 @@ router.put("/:id", (request, response) => {
 });
 router.delete("/:id", (request, response) => {
     let user_query;
-
     try {
         user_query = request.params.id;
     } catch (e) {
@@ -137,9 +149,21 @@ router.delete("/:id", (request, response) => {
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
-        var query = {
-            classId: user_query
-        };
+        var query;
+        if(user_query.charAt(0) === "u"){
+            query = {
+                studentId: user_query
+            };
+        }else if(user_query.charAt(0) === "c"){
+            query = {
+                classId: user_query
+            };
+        }else if(user_query.charAt(0) === "a"){
+            query = {
+                admissionId: user_query
+            };
+        }
+
         if (user_query) {
             dbo.collection(collectionClass).deleteOne(query, function (err, res) {
                 if (err) {
@@ -157,9 +181,8 @@ router.delete("/:id", (request, response) => {
             });
         } else {
             response.status(400);
-            response.send("Class id not matched.");
+            response.send("format not correct");
         }
-
     });
 });
 

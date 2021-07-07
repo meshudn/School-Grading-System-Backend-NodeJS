@@ -24,28 +24,26 @@ router.get("/", (request, response) => {
         });
     });
 });
-router.get("/:id", (request, response) => {
-    let user_query;
+router.get("/search", (request, response) => {
+    let query_subject;
     try {
-        user_query = request.params.id;
+        query_subject = request.query.subjectId;
     } catch (e) {
-        user_query = "";
-        response.status(400);
+        query_subject = "";
+        //response.status(400);
     }
-    console.log("id: " + user_query);
+    console.log("subject query: " + query_subject);
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query;
         query = {
-            testName: user_query,
-            archived: "false"
+            subjectId: query_subject
         };
         if (query) {
             dbo.collection(collectionName).find(query).toArray(function (err, res) {
                 if (err) throw err;
-                //console.log(res);
-
+                console.log(res);
                 if (res.length > 0) {
                     response.status(200);
                     response.send(res);
@@ -71,7 +69,8 @@ router.post("/", (request, response) => {
             testDate: object.testDate,
             subjectId: object.subjectId,
             subjectName: object.subjectName,
-            teacher: object.teacher,
+            teacherName: object.teacherName,
+            teacherId: object.teacherId,
             archived: "false"
         };
         dbo.collection(collectionName).insertOne(collection, function (err, res) {
@@ -85,6 +84,7 @@ router.post("/", (request, response) => {
 });
 
 router.put("/:id", (request, response) => {
+    console.log("updating tests");
     let queryId;
     try {
         queryId = request.params.id;
@@ -97,7 +97,7 @@ router.put("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.subjectName && object.subjectId && object.testName && object.testDate && object.teacher && object.archived) {
+        if (object.subjectName && object.subjectId && object.testName && object.testDate && object.teacherName && object.teacherId && object.archived) {
             collection = {
                 $set: {
                     testName: object.testName,
@@ -129,6 +129,51 @@ router.put("/:id", (request, response) => {
         });
     });
 });
+
+
+router.put("/archived/id", (request, response) => {
+    console.log("updating tests archived");
+    let queryId_subject;
+    try {
+        queryId_subject = request.query.subjectId;
+        console.log(queryId_subject);
+    } catch (e) {
+        queryId_subject = "";
+        //response.status(400);
+    }
+    MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("school_grading_system");
+        let collection, query;
+        if (queryId_subject) {
+            collection = {
+                $set: {
+                    archived: "true"
+                }
+            };
+            query = {
+                subjectId: "" + queryId_subject
+            };
+            dbo.collection(collectionName).updateMany(query, collection, function (err, res) {
+                if (err) throw err;
+                console.log("One test updating");
+                console.log(res);
+                if (res.modifiedCount) {
+                    response.status(200);
+                    response.send("");
+                } else {
+                    response.status(404);
+                    response.send("");
+                }
+                db.close();
+            });
+        } else {
+            response.status(400);
+        }
+
+    });
+});
+
 router.delete("/:id", (request, response) => {
     /*
     * id: testId of the test
@@ -140,7 +185,7 @@ router.delete("/:id", (request, response) => {
         user_query = "";
         response.status(400);
     }
-    console.log("id: " + user_query);
+    console.log("test id for deletion: " + user_query);
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");

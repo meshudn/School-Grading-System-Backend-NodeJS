@@ -14,7 +14,7 @@ router.get("/", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query = {
-            archived: "false"
+
         };
         dbo.collection(collectionSubjects).find(query).toArray(function (err, res) {
             if (err) throw err;
@@ -25,7 +25,7 @@ router.get("/", (request, response) => {
         });
     });
 });
-router.get("/:id", (request, response) => {
+/*router.get("/:id", (request, response) => {
     let user_query;
     try {
         user_query = request.params.id;
@@ -33,7 +33,7 @@ router.get("/:id", (request, response) => {
         user_query = "";
         response.status(400);
     }
-    console.log("id: " + user_query);
+    console.log("params id: " + user_query);
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
@@ -58,6 +58,40 @@ router.get("/:id", (request, response) => {
             });
         }
     });
+});*/
+router.get("/search", (request, response) => {
+    let query_teacher;
+    try {
+        query_teacher = request.query.teacherId;
+        //console.log(query_teacher);
+    } catch (e) {
+        query_teacher = "";
+        //response.status(400);
+    }
+    //console.log("id: " + query_teacher);
+    MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("school_grading_system");
+        var query;
+        query = {
+            teacherId: query_teacher
+        };
+        if (query) {
+            dbo.collection(collectionSubjects).find(query).toArray(function (err, res) {
+                if (err) throw err;
+                console.log(res);
+
+                if (res.length > 0) {
+                    response.status(200);
+                    response.send(res);
+                } else {
+                    response.status(404);
+                    response.send("");
+                }
+                db.close();
+            });
+        }
+    });
 });
 router.post("/", (request, response) => {
     const object = request.body;
@@ -70,7 +104,9 @@ router.post("/", (request, response) => {
             subjectId:  "s" + Date.now() + Math.floor(Math.random() * 1000),
             subjectName: object.subjectName,
             className: object.className,
-            teacher: object.teacher,
+            classId: object.className,
+            teacherId: object.teacherId,
+            teacherName: object.teacherName,
             archived: "false"
         };
         dbo.collection(collectionSubjects).insertOne(collection, function (err, res) {
@@ -89,19 +125,21 @@ router.put("/:id", (request, response) => {
         subjecid = request.params.id;
     } catch (e) {
         subjecid = "";
-        response.status(400);
+        //response.status(400);
     }
     const object = request.body;
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.subjectName && object.className && object.teacher && object.archived) {
+        if (object.subjectName && object.className && object.classId && object.teacherName && object.teacherId && object.archived) {
             collection = {
                 $set: {
                     className: object.className,
+                    classId: object.classId,
                     subjectName: object.subjectName,
-                    teacher: object.teacher,
+                    teacherId: object.teacherId,
+                    teacherName: object.teacherName,
                     archived: object.archived,
                 }
             };
@@ -110,27 +148,26 @@ router.put("/:id", (request, response) => {
             response.send();
         }
         var query = {
-            className: subjecid
+            subjectId: subjecid
         };
-
-        dbo.collection(collectionSubjects).updateOne(query, collection, function (err, res) {
-            if (err) throw err;
-            console.log("One subject updated");
-            if (res.matchedCount == 1) {
-                response.status(200);
-                response.send("");
-            } else {
-                response.status(404);
-                response.send("");
-            }
-
-            db.close();
-        });
+        if(object.subjectName){
+            dbo.collection(collectionSubjects).updateOne(query, collection, function (err, res) {
+                if (err) throw err;
+                console.log("One subject updated");
+                if (res.matchedCount == 1) {
+                    response.status(200);
+                    response.send("");
+                } else {
+                    response.status(404);
+                    response.send("");
+                }
+                db.close();
+            });
+        }
     });
 });
 router.delete("/:id", (request, response) => {
     let user_query;
-
     try {
         user_query = request.params.id;
     } catch (e) {
@@ -142,7 +179,7 @@ router.delete("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query = {
-            subjectName: user_query
+            subjectId: user_query
         };
         if (user_query) {
             dbo.collection(collectionSubjects).deleteOne(query, function (err, res) {
@@ -161,7 +198,7 @@ router.delete("/:id", (request, response) => {
             });
         } else {
             response.status(400);
-            response.send("Class Name is not matched or class Name format is not correct.");
+            response.send("format not matched");
         }
 
     });

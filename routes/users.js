@@ -3,6 +3,8 @@
 * User Add, Remove, Update
 * */
 const express = require("express");
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const saltRound = 10;
@@ -25,30 +27,36 @@ router.get("/", (request, response) => {
         });
     });
 });
-router.get("/:id", (request, response) => {
-    let user_query;
-
+router.get("/search", (request, response) => {
+    let query_role, query_id;
     try {
-        user_query = request.params.id;
+        query_role = request.query.role;
+        query_id = request.query.id;
+
+        console.log("role: " + query_role);
+        console.log("id: " + query_id);
     } catch (e) {
-        user_query = "";
-        response.status(400);
+        query_role = "";
+        query_id = "";
     }
-    console.log("id: " + user_query);
+
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query;
-        if (user_query == "teacher" || user_query == "student" || user_query == "admin") {
+        if (query_role != "" && query_role) {
             query = {
-                role: user_query
+                role: query_role
             }
-            //console.log("user format checked");
-        } else if (user_query % 2 == 0 || user_query % 2 != 0) {
+        } else if (query_id != "" && query_id) {
             query = {
-                userId: parseInt(user_query)
+                userid: query_id
             }
-            //console.log("number format checked");
+        } else if (query_role && query_id) {
+            query = {
+                userid: query_id,
+                role: query_role
+            }
         } else {
             console.log("bad request checked");
             response.status(400);
@@ -56,9 +64,10 @@ router.get("/:id", (request, response) => {
             query = 0;
         }
         if (query) {
+            console.log(query);
             dbo.collection("users").find(query).toArray(function (err, res) {
                 if (err) throw err;
-                //console.log(res);
+                console.log(res);
 
                 if (res.length > 0) {
                     response.status(200);
@@ -81,7 +90,7 @@ router.post("/", (request, response) => {
             if (err) throw err;
             var dbo = db.db("school_grading_system");
             var collection = {
-                userId: Date.now() + Math.floor(Math.random() * 1000),
+                userid: "u" + Date.now() + Math.floor(Math.random() * 1000),
                 username: object.username,
                 password: hash,
                 firstName: object.firstName,
@@ -93,7 +102,7 @@ router.post("/", (request, response) => {
                 if (err) throw err;
                 console.log("One user inserted");
                 response.status(201);
-                response.send("/users/" + collection.userId);
+                response.send("/users/" + collection.userid);
                 db.close();
             });
         });
@@ -105,6 +114,8 @@ router.post("/", (request, response) => {
 router.post("/login", (request, response) => {
     const object = request.body;
     console.log("request data: " + request.body);
+    console.log("Query: username: " + object.username);
+    console.log("Query: password: " + object.password);
     var userPassword;
     /*
     * Getting user stored password from the database
@@ -125,10 +136,11 @@ router.post("/login", (request, response) => {
                     if (hashRes == true) {
                         console.log("login successful");
                         response.status(200);
-                        response.send("");
+                        response.send(res.role);
                     } else {
                         response.status(401);
                         response.send("");
+                        console.log("login failed: " + hashRes);
                     }
                 });
             } else {
@@ -151,112 +163,31 @@ router.put("/:id", (request, response) => {
     }
     const object = request.body;
     console.log("request data: " + object.firstName);
+    console.log("request password: " + object.password);
 
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.username && object.password && object.firstName && object.lastName && object.role) {
+        if (object.username && object.password && object.firstName && object.lastName && object.role && object.archived) {
             collection = {
                 $set: {
                     username: object.username,
                     password: object.password,
                     firstName: object.firstName,
                     lastName: object.lastName,
-                    role: object.role
-                }
-            };
-        } else if (object.username && object.firstName && object.lastName && object.role) {
-            collection = {
-                $set: {
-                    username: object.username,
-                    firstName: object.firstName,
-                    lastName: object.lastName,
-                    role: object.role
-                }
-            };
-        } else if (object.username && object.password && object.firstName && object.lastName) {
-            collection = {
-                $set: {
-                    username: object.username,
-                    password: object.password,
-                    firstName: object.firstName,
-                    lastName: object.lastName,
-                }
-            };
-        } else if (object.username && object.password && object.firstName) {
-            collection = {
-                $set: {
-                    username: object.username,
-                    password: object.password,
-                    firstName: object.firstName,
-                }
-            };
-        } else if (object.username && object.password && object.lastName) {
-            collection = {
-                $set: {
-                    username: object.username,
-                    password: object.password,
-                    lastName: object.lastName,
-                }
-            };
-        } else if (object.username && object.password) {
-            collection = {
-                $set: {
-                    username: object.username,
-                    password: object.password,
-                }
-            };
-        } else if (object.username && object.firstName) {
-            collection = {
-                $set: {
-                    username: object.username,
-                    firstName: object.firstName,
-                }
-            };
-        } else if (object.username && object.lastName) {
-            collection = {
-                $set: {
-                    username: object.username,
-                    lastName: object.lastName,
-                }
-            };
-        } else if (object.username && object.role) {
-            collection = {
-                $set: {
-                    username: object.username,
                     role: object.role,
+                    archived: object.archived
                 }
             };
-        } else if (object.password) {
-            collection = {
-                $set: {
-                    password: object.password,
-                }
-            };
-
-        } else if (object.firstName) {
-            collection = {
-                $set: {
-                    firstName: object.firstName,
-                }
-            };
-        } else if (object.lastName) {
-            collection = {
-                $set: {
-                    lastName: object.lastName,
-                }
-            };
-        } else if (object.username) {
+        } else if (object.username && object.firstName && object.lastName && object.role && object.archived) {
             collection = {
                 $set: {
                     username: object.username,
-                }
-            };
-        } else if (object.role) {
-            collection = {
-                $set: {
+                    firstName: object.firstName,
+                    lastName: object.lastName,
                     role: object.role,
+                    archived: object.archived
                 }
             };
         } else {
@@ -264,7 +195,7 @@ router.put("/:id", (request, response) => {
             response.send();
         }
         var query = {
-            userId: parseInt(user_id)
+            userid: user_id
         };
 
 
@@ -273,12 +204,12 @@ router.put("/:id", (request, response) => {
         * then storing data after hashing password
         * or normal storing mechanism to mongodb
         * */
-        if(object.password){
+        if (object.password) {
             /*
             * updating new password
             * password hashing before storing
             * */
-            console.log("collection: "+ collection);
+            console.log("collection: " + collection);
             bcrypt.hash(object.password, saltRound, (err, hash) => {
                 collection.$set.password = hash;
                 dbo.collection("users").updateOne(query, collection, function (err, res) {
@@ -289,13 +220,13 @@ router.put("/:id", (request, response) => {
                     db.close();
                 });
             });
-        }else{
-            dbo.collection("users").updateOne(query,collection, function (err, res) {
+        } else {
+            dbo.collection("users").updateOne(query, collection, function (err, res) {
                 if (err) throw err;
                 console.log("One user updated");
-                if (res.matchedCount == 1) {
+                if (res.modifiedCount == 1) {
                     response.status(200);
-                    response.send("");
+                    response.send(res);
                 } else {
                     response.status(404);
                     response.send("");
@@ -309,7 +240,6 @@ router.put("/:id", (request, response) => {
 });
 router.delete("/:id", (request, response) => {
     let user_query;
-
     try {
         user_query = request.params.id;
     } catch (e) {
@@ -320,10 +250,31 @@ router.delete("/:id", (request, response) => {
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
+        /*/!*
+        * Special case Checking: Does this teacher has any subject or not
+        * *!/
+        var query = {teacherId: user_query};
+        let isTeacherHasSubject = false;
+        dbo.collection("subjects").findOne(query, function (err, res) {
+            if (err) throw err;
+            //console.log(res);
+            if (res) {
+                isTeacherHasSubject = true;
+            } else {
+                isTeacherHasSubject = false;
+                response.status(204);
+                response.send("Can not delete because teacher has atleast one subject.");
+            }
+            db.close();
+        });
+*/
+        /*
+        * special case: deleteing if teacher has no subject
+        * */
         var query = {
-            userId: parseInt(user_query)
+            userid: user_query
         };
-        if (user_query % 2 == 0 || user_query % 2 != 0) {
+        if (query) {
             dbo.collection("users").deleteOne(query, function (err, res) {
                 if (err) {
                     throw err;
@@ -338,11 +289,7 @@ router.delete("/:id", (request, response) => {
                 }
                 db.close();
             });
-        } else {
-            response.status(400);
-            response.send("Id is not matched or Id format is not correct.");
         }
-
     });
 });
 

@@ -25,56 +25,53 @@ router.get("/", (request, response) => {
     });
 });
 router.get("/search", (request, response) => {
-    let query_testId, query_studentId;
+    let query_testId, query_subjectId;
     try {
         query_testId = request.query.testId;
-        query_studentId = request.query.studentId;
+        query_subjectId = request.query.subjectId;
+        console.log(query_subjectId);
+        console.log(query_testId);
     } catch (e) {
-        query_testName = "";
-        query_studentId = "";
+        query_testId = "";
+        query_subjectId = "";
         response.status(400);
     }
-    console.log("id: " + user_query);
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query;
         query = {
             testId: query_testId,
-            studentId: query_studentId,
-            archived: "false"
+            subjectId: query_subjectId
         };
-        if (query) {
-            dbo.collection(collectionName).find(query).toArray(function (err, res) {
-                if (err) throw err;
-                //console.log(res);
+        dbo.collection(collectionName).find(query).toArray(function (err, res) {
+            if (err) throw err;
+            //console.log(res);
 
-                if (res.length > 0) {
-                    response.status(200);
-                    response.send(res);
-                } else {
-                    response.status(404);
-                    response.send("");
-                }
-                db.close();
-            });
-        }
+            if (res) {
+                response.status(200);
+                response.send(res);
+            } else {
+                response.status(404);
+                response.send("");
+            }
+            db.close();
+        });
     });
 });
 router.post("/", (request, response) => {
     const object = request.body;
     console.log("request data: " + request.body);
-
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
 
         var collection = {
             gradeId: "g" + Date.now() + Math.floor(Math.random() * 1000),
-            testId:  object.testId,
+            testId: object.testId,
             subjectId: object.subjectId,
             classId: object.classId,
-            userId: object.userId,
+            userid: object.userid,
             testDate: object.testDate,
             grade: object.grade,
             gradePoint: object.gradePoint,
@@ -104,16 +101,16 @@ router.put("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.testId && object.subjectId && object.classId && object.userId && object.testDate &&  object.grade &&  object.gradePoint &&  object.marks &&   object.archived) {
+        if (object.testId && object.subjectId && object.classId && object.userid && object.testDate && object.grade && object.gradePoint && object.marks && object.archived) {
             collection = {
                 $set: {
                     testId: object.testId,
                     testDate: object.testDate,
                     subjectId: object.subjectId,
                     classId: object.classId,
-                    userId: object.userId,
+                    userid: object.userid,
                     grade: object.grade,
-                    gradePoint : object.gradePoint,
+                    gradePoint: object.gradePoint,
                     marks: object.marks,
                     archived: object.archived,
                 }
