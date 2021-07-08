@@ -120,11 +120,11 @@ router.post("/", (request, response) => {
 });
 
 router.put("/:id", (request, response) => {
-    let subjecid;
+    let subjectid;
     try {
-        subjecid = request.params.id;
+        subjectid = request.params.id;
     } catch (e) {
-        subjecid = "";
+        subjectid = "";
         //response.status(400);
     }
     const object = request.body;
@@ -148,9 +148,9 @@ router.put("/:id", (request, response) => {
             response.send();
         }
         var query = {
-            subjectId: subjecid
+            subjectId: subjectid
         };
-        if(object.subjectName){
+        if(subjectid){
             dbo.collection(collectionSubjects).updateOne(query, collection, function (err, res) {
                 if (err) throw err;
                 console.log("One subject updated");

@@ -68,6 +68,7 @@ router.post("/", (request, response) => {
             testName: object.testName,
             testDate: object.testDate,
             subjectId: object.subjectId,
+            classId: object.classId,
             subjectName: object.subjectName,
             teacherName: object.teacherName,
             teacherId: object.teacherId,
@@ -97,12 +98,13 @@ router.put("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.subjectName && object.subjectId && object.testName && object.testDate && object.teacherName && object.teacherId && object.archived) {
+        if (object.subjectName && object.subjectId && object.classId && object.testName && object.testDate && object.teacherName && object.teacherId && object.archived) {
             collection = {
                 $set: {
                     testName: object.testName,
                     testDate: object.testDate,
                     subjectId: object.subjectId,
+                    classId: object.classId,
                     subjectName: object.subjectName,
                     teacher: object.teacher,
                     archived: object.archived,
@@ -158,11 +160,8 @@ router.put("/archived/id", (request, response) => {
                 if (err) throw err;
                 console.log("One test updating");
                 console.log(res);
-                if (res.modifiedCount) {
+                if (res.matchedCount) {
                     response.status(200);
-                    response.send("");
-                } else {
-                    response.status(404);
                     response.send("");
                 }
                 db.close();

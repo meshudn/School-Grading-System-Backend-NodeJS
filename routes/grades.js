@@ -25,16 +25,16 @@ router.get("/", (request, response) => {
     });
 });
 router.get("/search", (request, response) => {
-    let query_testId, query_subjectId;
+    let query_testId, query_subjectId, query_studentId;
     try {
         query_testId = request.query.testId;
         query_subjectId = request.query.subjectId;
+        query_studentId = request.query.studentId;
         console.log(query_subjectId);
         console.log(query_testId);
     } catch (e) {
-        query_testId = "";
-        query_subjectId = "";
-        response.status(400);
+        console.log(e);
+        //response.status(400);
     }
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
@@ -44,6 +44,9 @@ router.get("/search", (request, response) => {
             testId: query_testId,
             subjectId: query_subjectId
         };
+        if (query_studentId) {
+            query.studentId = query_studentId;
+        }
         dbo.collection(collectionName).find(query).toArray(function (err, res) {
             if (err) throw err;
             //console.log(res);
@@ -66,25 +69,25 @@ router.post("/", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
 
-        var collection = {
+        var collection1 = {
             gradeId: "g" + Date.now() + Math.floor(Math.random() * 1000),
             testId: object.testId,
+            testName: object.testName,
             subjectId: object.subjectId,
             classId: object.classId,
-            userid: object.userid,
-            testDate: object.testDate,
+            studentId: object.studentId,
+            studentName: object.studentName,
             grade: object.grade,
-            gradePoint: object.gradePoint,
-            marks: object.marks,
             archived: "false"
         };
-        dbo.collection(collectionName).insertOne(collection, function (err, res) {
+        dbo.collection(collectionName).insertOne(collection1, function (err, res) {
             if (err) throw err;
             console.log("One subject inserted");
             response.status(201);
-            response.send("/grades/" + collection.testId);
+            response.send("/grades/" + collection1.testId);
             db.close();
         });
+
     });
 });
 
@@ -101,17 +104,17 @@ router.put("/:id", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection;
-        if (object.testId && object.subjectId && object.classId && object.userid && object.testDate && object.grade && object.gradePoint && object.marks && object.archived) {
+        if (object.testId && object.testName && object.subjectId && object.classId && object.subjectName && object.studentId && object.studentName && object.grade && object.archived) {
             collection = {
                 $set: {
                     testId: object.testId,
-                    testDate: object.testDate,
+                    testName: object.testName,
                     subjectId: object.subjectId,
                     classId: object.classId,
-                    userid: object.userid,
+                    subjectName: object.subjectName,
+                    studentId: object.studentId,
+                    studentName: object.studentName,
                     grade: object.grade,
-                    gradePoint: object.gradePoint,
-                    marks: object.marks,
                     archived: object.archived,
                 }
             };

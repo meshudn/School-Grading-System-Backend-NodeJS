@@ -10,6 +10,7 @@ const bcrypt = require("bcrypt");
 const saltRound = 10;
 var MongoClient = require('mongodb').MongoClient;
 var mongoDbUrl = "mongodb://localhost:27017/";
+router.use(bodyParser.json());
 
 router.get("/", (request, response) => {
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
