@@ -114,9 +114,6 @@ router.post("/", (request, response) => {
 * */
 router.post("/login", (request, response) => {
     const object = request.body;
-    console.log("request data: " + request.body);
-    console.log("Query: username: " + object.username);
-    console.log("Query: password: " + object.password);
     var userPassword;
     /*
     * Getting user stored password from the database
@@ -127,17 +124,13 @@ router.post("/login", (request, response) => {
         var query = {username: object.username};
         dbo.collection("users").findOne(query, function (err, res) {
             if (err) throw err;
-            //console.log(res);
-
             if (res) {
                 userPassword = res.password;
-                console.log("userpass: " + userPassword);
-
                 bcrypt.compare(object.password, userPassword, function (err, hashRes) {
                     if (hashRes == true) {
                         console.log("login successful");
                         response.status(200);
-                        response.send(res.role);
+                        response.send(res);
                     } else {
                         response.status(401);
                         response.send("");
@@ -245,7 +238,7 @@ router.delete("/:id", (request, response) => {
         user_query = request.params.id;
     } catch (e) {
         user_query = "";
-        response.status(400);
+        //response.status(400);
     }
     console.log("id: " + user_query);
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {

@@ -39,11 +39,15 @@ router.get("/search", (request, response) => {
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
-        var query;
-        query = {
-            testId: query_testId,
-            subjectId: query_subjectId
+        var query = {
+            archived: "false"
         };
+        if(query_testId){
+            query.testId = query_testId;
+        }
+        if(query_subjectId){
+            query.subjectId = query_subjectId;
+        }
         if (query_studentId) {
             query.studentId = query_studentId;
         }
