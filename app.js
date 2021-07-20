@@ -23,6 +23,9 @@ app.use("/api/v1/grades", gradeRoute);
 const admissionRoute = require("./routes/admission");
 app.use("/api/v1/admission", admissionRoute);
 
+const messageRoute = require("./routes/messages");
+app.use("/api/v1/messages", messageRoute);
+
 app.get("/", (request,response) => {
     response.send("Welcome to the Fastest School Grading System");
 });

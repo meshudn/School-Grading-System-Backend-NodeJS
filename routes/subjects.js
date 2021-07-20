@@ -104,7 +104,7 @@ router.post("/", (request, response) => {
             subjectId:  "s" + Date.now() + Math.floor(Math.random() * 1000),
             subjectName: object.subjectName,
             className: object.className,
-            classId: object.className,
+            classId: object.classId,
             teacherId: object.teacherId,
             teacherName: object.teacherName,
             archived: "false"

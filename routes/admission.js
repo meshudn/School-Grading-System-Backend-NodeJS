@@ -25,28 +25,30 @@ router.get("/", (request, response) => {
         });
     });
 });
-router.get("/:id", (request, response) => {
-    let user_query;
+router.get("/search", (request, response) => {
+    let query_classId, query_studentId;
 
     try {
-        user_query = request.params.id;
+        query_classId = request.query.classId;
+        query_studentId = request.query.studentId;
     } catch (e) {
         user_query = "";
-        response.status(400);
     }
-    console.log("id: " + user_query);
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var query;
         query = {
-            classId: user_query
+          classId: query_classId
         };
+        if(query_studentId){
+            query.studentId = query_studentId;
+        }
+
         if (query) {
             dbo.collection(collectionClass).find(query).toArray(function (err, res) {
                 if (err) throw err;
                 //console.log(res);
-
                 if (res.length > 0) {
                     response.status(200);
                     response.send(res);

@@ -1,12 +1,12 @@
 /*
-* API /Classes
-* Class Add, Remove, Update
+* API /message
+* message Add, Remove, Update
 * */
 const express = require("express");
 const router = express.Router();
 var MongoClient = require('mongodb').MongoClient;
 var mongoDbUrl = "mongodb://localhost:27017/";
-const collectionClass = "classes";
+const collectionClass = "messages";
 const collectionUsers = "users";
 
 router.get("/", (request, response) => {
@@ -26,11 +26,12 @@ router.get("/", (request, response) => {
     });
 });
 router.get("/search", (request, response) => {
-    let query_senderId,query_receiverId;
+    let query_senderId,query_receiverId, query_messageId;
 
     try {
         query_senderId = request.query.senderId;
         query_receiverId = request.query.query_receiverId;
+        query_messageId = request.query.messageId;
     } catch (e) {
         console.log(e);
     }
@@ -46,6 +47,9 @@ router.get("/search", (request, response) => {
         }
         if(query_receiverId){
             query.receiverId = query_receiverId;
+        }
+        if(query_messageId){
+            query.messageId = query_messageId;
         }
         if (query) {
             dbo.collection(collectionClass).find(query).toArray(function (err, res) {
@@ -71,9 +75,11 @@ router.post("/", (request, response) => {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
         var collection = {
-            messageId: "c" + Date.now() + Math.floor(Math.random() * 1000),
+            messageId: "m" + Date.now() + Math.floor(Math.random() * 1000),
             senderId: object.senderId,
             receiverId: object.receiverId,
+            text: object.text,
+            seen: object.seen,
             archived: "false"
         };
         dbo.collection(collectionClass).insertOne(collection, function (err, res) {
@@ -98,17 +104,12 @@ router.put("/:id", (request, response) => {
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
-        var collection;
-        if (object.className) {
-            collection = {
+        var collection = {
                 $set: {
                     messageId: object.messageId
                 }
             };
-        } else {
-            response.status(400);
-            response.send();
-        }
+
         var query = {
             messageId: user_query
         };
