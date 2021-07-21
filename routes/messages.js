@@ -51,6 +51,13 @@ router.get("/search", (request, response) => {
         if(query_messageId){
             query.messageId = query_messageId;
         }
+        if(query_senderId && query_receiverId){
+            query ={
+                senderId: query_senderId,
+                receiverId: query_receiverId
+            }
+        }
+
         if (query) {
             dbo.collection(collectionClass).find(query).toArray(function (err, res) {
                 if (err) throw err;

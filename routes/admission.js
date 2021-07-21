@@ -171,7 +171,7 @@ router.delete("/:id", (request, response) => {
                 if (err) {
                     throw err;
                 }
-                console.log("One class deleted: " + res);
+                console.log("One class deleted: " );
                 if (res.deletedCount == 1) {
                     response.status(200);
                     response.send("Successfully deleted!");

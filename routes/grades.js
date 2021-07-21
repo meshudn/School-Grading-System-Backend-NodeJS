@@ -39,27 +39,42 @@ router.get("/search", (request, response) => {
     MongoClient.connect(mongoDbUrl, {useUnifiedTopology: true}, function (err, db) {
         if (err) throw err;
         var dbo = db.db("school_grading_system");
-        var query = {
-            archived: "false"
-        };
-        if(query_testId){
-            query.testId = query_testId;
+        var query;
+        if(query_studentId && query_subjectId && query_testId){
+            query = {
+                testId: query_testId,
+                subjectId: query_subjectId,
+                studentId: query_studentId
+            };
+        }else if(query_subjectId && query_testId){
+            query = {
+                subjectId: query_subjectId,
+                testId: query_testId
+            };
         }
-        if(query_subjectId){
-            query.subjectId = query_subjectId;
+        else if(query_studentId){
+            query = {
+                studentId: query_studentId
+            };
+        }else{
+            query = {
+                testId: query_testId,
+                subjectId: query_subjectId,
+                studentId: query_studentId
+            };
         }
-        if (query_studentId) {
-            query.studentId = query_studentId;
-        }
+
         dbo.collection(collectionName).find(query).toArray(function (err, res) {
             if (err) throw err;
             //console.log(res);
 
-            if (res) {
+            if (res.length > 0) {
+                console.log("200 grades");
                 response.status(200);
                 response.send(res);
             } else {
-                response.status(404);
+                response.status(204);
+                console.log("204 grades");
                 response.send("");
             }
             db.close();
@@ -78,6 +93,7 @@ router.post("/", (request, response) => {
             testId: object.testId,
             testName: object.testName,
             subjectId: object.subjectId,
+            subjectName: object.subjectName,
             classId: object.classId,
             studentId: object.studentId,
             studentName: object.studentName,
